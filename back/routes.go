@@ -29,6 +29,7 @@ func handlePage(w http.ResponseWriter, r *http.Request) {
 func serveRoutes(addr string) {
 	s := websocket.Server{Handler: websocket.Handler(handleConn)}
 	http.HandleFunc("/", handlePage)
+	http.HandleFunc("/users", HandleUsers)
 	http.HandleFunc("/messages/ws", s.ServeHTTP)
 	http.HandleFunc("/messages/history", handleMessageHistory)
 	log.Fatal(http.ListenAndServe(addr, nil))
