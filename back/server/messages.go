@@ -1,18 +1,17 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 
 	"golang.org/x/net/websocket"
+	"ru.arrowinaknee.vk-chat/api"
 )
 
 type messages struct {
 	connections []*websocket.Conn
-	messages    []string
+	history     []string
 }
 
 func (s *Server) handleConn(ws *websocket.Conn) {
@@ -33,20 +32,13 @@ func (s *Server) handleConn(ws *websocket.Conn) {
 			}
 			log.Fatal(err)
 		}
-		s.msg.messages = append(s.msg.messages, string(msg[:n]))
+		s.msg.history = append(s.msg.history, string(msg[:n]))
 		for _, ows := range s.msg.connections {
 			fmt.Fprintf(ows, "%s\n", msg[:n])
 		}
 	}
 }
 
-func (s *Server) handleMessageHistory(w http.ResponseWriter, r *http.Request) {
-	bytes, err := json.Marshal(s.msg.messages)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, err)
-		log.Printf("Error serving /messages/history: %s\n", err)
-		return
-	}
-	w.Write(bytes)
+func (s *Server) handleMessageHistory(res *api.JsonResponse, r *api.GetRequest) {
+	res.Write(s.msg.history)
 }

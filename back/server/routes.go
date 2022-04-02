@@ -4,12 +4,20 @@ import (
 	"net/http"
 
 	"golang.org/x/net/websocket"
+	"ru.arrowinaknee.vk-chat/api"
 )
 
 func (s *Server) routes() {
 	ws_serv := websocket.Server{Handler: websocket.Handler(s.handleConn)}
+	http.Handle("/messages/ws", ws_serv)
+
+	http.Handle("/users", api.Endpoint{
+		Get:  api.Get(s.HandleUsersGet),
+		Post: api.Json(s.HandleUsersPost),
+	})
+	http.Handle("/messages/history", api.Endpoint{
+		Get: api.Get(s.handleMessageHistory),
+	})
+
 	http.HandleFunc("/", s.handlePage)
-	http.HandleFunc("/users", s.HandleUsers)
-	http.HandleFunc("/messages/ws", ws_serv.ServeHTTP)
-	http.HandleFunc("/messages/history", s.handleMessageHistory)
 }
