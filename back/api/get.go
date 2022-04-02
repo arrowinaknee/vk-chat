@@ -11,7 +11,7 @@ func (r GetRequest) Id() string {
 	return r.Raw.FormValue("id")
 }
 func (r GetRequest) Query() string {
-	return r.Raw.FormValue("id")
+	return r.Raw.FormValue("q")
 }
 
 // count, skip etc.
