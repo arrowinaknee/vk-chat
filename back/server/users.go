@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -23,7 +23,7 @@ type db_user struct {
 	RegDate  int64  `bson:"reg_date"`
 }
 
-func HandleUsers(w http.ResponseWriter, r *http.Request) {
+func (s *Server) HandleUsers(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		id := r.FormValue("id")
@@ -32,7 +32,7 @@ func HandleUsers(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, "Request must have 'id' specified")
 			return
 		}
-		conn, err := db.Connect()
+		conn, err := s.db.Connect()
 		if err != nil {
 			w.WriteHeader(http.StatusBadGateway)
 			fmt.Fprint(w, "Database not available")
@@ -67,7 +67,7 @@ func HandleUsers(w http.ResponseWriter, r *http.Request) {
 			fmt.Print("Could not parse json body")
 			return
 		}
-		conn, err := db.Connect()
+		conn, err := s.db.Connect()
 		if err != nil {
 			w.WriteHeader(http.StatusBadGateway)
 			fmt.Print("Database not available")

@@ -1,9 +1,16 @@
 package main
 
-import "os"
+import (
+	"os"
 
-var db db_t = db_t(os.Getenv("ARROW_DB_URI"))
+	"ru.arrowinaknee.vk-chat/server"
+)
 
 func main() {
-	serveRoutes(":8089")
+	var s = server.Server{
+		Addr:   ":8089",
+		DBLink: os.Getenv("ARROWCHAT_DB_URI"),
+	}
+
+	s.Start()
 }

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -14,6 +14,7 @@ func (db db_t) Connect() (c *mongo.Client, err error) {
 	c, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(string(db)))
 	if err != nil {
 		log.Printf("Error connecting to db: %s", err)
+		return
 	}
 	err = c.Ping(context.TODO(), nil)
 	if err != nil {

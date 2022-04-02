@@ -1,15 +1,15 @@
-package main
+package server
 
 import (
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"golang.org/x/net/websocket"
 )
 
-func handlePage(w http.ResponseWriter, r *http.Request) {
+// Temorary file, handles app page serving before a proper front-end app is built
+
+func (s *Server) handlePage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprint(w, "404 page not found")
@@ -24,13 +24,4 @@ func handlePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, string(bytes))
-}
-
-func serveRoutes(addr string) {
-	s := websocket.Server{Handler: websocket.Handler(handleConn)}
-	http.HandleFunc("/", handlePage)
-	http.HandleFunc("/users", HandleUsers)
-	http.HandleFunc("/messages/ws", s.ServeHTTP)
-	http.HandleFunc("/messages/history", handleMessageHistory)
-	log.Fatal(http.ListenAndServe(addr, nil))
 }
