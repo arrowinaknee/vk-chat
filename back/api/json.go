@@ -11,6 +11,7 @@ type JsonResponse struct {
 }
 
 func (res JsonResponse) Write(v any) (err error) {
+	res.w.Header().Add("content-type", "application/json; charset=UTF-8")
 	err = json.NewEncoder(res.w).Encode(v)
 	if err != nil {
 		res.Error(http.StatusInternalServerError, "could not encode response")
@@ -18,6 +19,7 @@ func (res JsonResponse) Write(v any) (err error) {
 	return
 }
 func (res JsonResponse) Error(status int, err string) {
+	res.w.Header().Add("content-type", "application/json; charset=UTF-8")
 	res.w.WriteHeader(status)
 	// hardcoded json generation to avoid possible loop
 	fmt.Fprintf(res.w, "{\"status\":%d,\"error\":\"%s\"}", status, err)
