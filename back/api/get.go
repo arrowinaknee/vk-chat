@@ -4,14 +4,14 @@ import "net/http"
 
 // shortcuts for generic get request uses
 type GetRequest struct {
-	Raw *http.Request
+	Base *http.Request
 }
 
 func (r GetRequest) Id() string {
-	return r.Raw.FormValue("id")
+	return r.Base.FormValue("id")
 }
 func (r GetRequest) Query() string {
-	return r.Raw.FormValue("q")
+	return r.Base.FormValue("q")
 }
 
 // count, skip etc.

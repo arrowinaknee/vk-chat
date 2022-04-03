@@ -28,7 +28,12 @@ func (res JsonResponse) NotFound() {
 	res.Error(http.StatusNotFound, "resource not found")
 }
 
-type JsonHandler[T any] func(*JsonResponse, *T)
+type JsonRequest[T any] struct {
+	Base *http.Request
+	V    *T // pre-parsed request body
+}
+
+type JsonHandler[T any] func(*JsonResponse, *JsonRequest[T])
 
 // Middleware that decodes json from request body before calling the handler
 //
@@ -37,15 +42,15 @@ type JsonHandler[T any] func(*JsonResponse, *T)
 func Json[T any](handler JsonHandler[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := &JsonResponse{w}
-		v := new(T)
+		req := &JsonRequest[T]{r, new(T)}
 
-		err := json.NewDecoder(r.Body).Decode(v)
+		err := json.NewDecoder(r.Body).Decode(req.V)
 
 		if err != nil {
 			res.Error(http.StatusBadRequest, err.Error())
 			return
 		}
 
-		handler(res, v)
+		handler(res, req)
 	}
 }

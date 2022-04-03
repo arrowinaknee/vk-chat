@@ -83,7 +83,7 @@ func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.GetRequest) {
 	}
 }
 
-func (s *Server) HandleUsersPost(res *api.JsonResponse, u *api_user) {
+func (s *Server) HandleUsersPost(res *api.JsonResponse, r *api.JsonRequest[api_user]) {
 	conn, err := s.db.Connect()
 	if err != nil {
 		res.Error(http.StatusBadGateway, "database not available")
@@ -92,8 +92,8 @@ func (s *Server) HandleUsersPost(res *api.JsonResponse, u *api_user) {
 	c := conn.Collection("users")
 	t := time.Now().Unix()
 	_, err = c.InsertOne(context.TODO(), db_user{
-		Id:       u.Login,
-		Nickname: u.Nickname,
+		Id:       r.V.Login,
+		Nickname: r.V.Nickname,
 		RegDate:  t,
 	})
 

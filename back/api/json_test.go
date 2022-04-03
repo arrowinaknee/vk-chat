@@ -76,11 +76,11 @@ func TestJsonMiddlewareNormal(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/anything", bytes.NewReader(buf))
 
-	fun := Json(func(res *JsonResponse, v *TestStruct) {
-		if *v != in {
+	fun := Json(func(res *JsonResponse, r *JsonRequest[TestStruct]) {
+		if *r.V != in {
 			t.Fatal("Handler input did not match expected value")
 		}
-		res.Write(v)
+		res.Write(r.V)
 	})
 	fun(w, r)
 
@@ -97,7 +97,7 @@ func TestJsonMiddlewareBadInput(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/anything", strings.NewReader(in))
 
-	fun := Json(func(res *JsonResponse, v *TestStruct) {
+	fun := Json(func(res *JsonResponse, r *JsonRequest[TestStruct]) {
 		t.Fatal("Handler was called with bad request")
 	})
 	fun(w, r)
@@ -119,7 +119,7 @@ func TestJsonMiddlewareBadOutput(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/anything", bytes.NewReader(buf))
 
-	fun := Json(func(res *JsonResponse, v *TestStruct) {
+	fun := Json(func(res *JsonResponse, r *JsonRequest[TestStruct]) {
 		res.Write(make(chan int))
 	})
 	fun(w, r)
