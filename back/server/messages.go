@@ -39,6 +39,6 @@ func (s *Server) handleConn(ws *websocket.Conn) {
 	}
 }
 
-func (s *Server) handleMessageHistory(res *api.JsonResponse, r *api.GetRequest) {
+func (s *Server) handleMessageHistory(res *api.JsonResponse, r *api.UrlRequest) {
 	res.Write(s.msg.history)
 }

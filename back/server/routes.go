@@ -12,11 +12,11 @@ func (s *Server) routes() {
 	http.Handle("/messages/ws", ws_serv)
 
 	http.Handle("/users", api.Endpoint{
-		Get:  api.Get(s.HandleUsersGet),
+		Get:  api.Url(s.HandleUsersGet),
 		Post: api.Json(s.HandleUsersPost),
 	})
 	http.Handle("/messages/history", api.Endpoint{
-		Get: api.Get(s.handleMessageHistory),
+		Get: api.Url(s.handleMessageHistory),
 	})
 
 	http.HandleFunc("/", s.handlePage)

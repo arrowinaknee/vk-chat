@@ -24,7 +24,7 @@ type db_user struct {
 	RegDate  int64  `bson:"reg_date"`
 }
 
-func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.GetRequest) {
+func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.UrlRequest) {
 	conn, err := s.db.Connect()
 	if err != nil {
 		res.Error(http.StatusBadGateway, "database not available")
@@ -68,7 +68,7 @@ func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.GetRequest) {
 		res.Write(arr)
 
 	} else {
-		u, err := db.Decode[db.User](c.FindOne(context.TODO(), db.ById(r.Id())))
+		u, err := db.Decode[db.User](c.FindOne(context.TODO(), db.ById(r.Id()), options.FindOne().SetProjection(bson.D{{Key: "friends", Value: 0}})))
 
 		if err == mongo.ErrNoDocuments {
 			res.NotFound()

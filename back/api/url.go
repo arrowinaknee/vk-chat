@@ -3,23 +3,23 @@ package api
 import "net/http"
 
 // shortcuts for generic get request uses
-type GetRequest struct {
+type UrlRequest struct {
 	Base *http.Request
 }
 
-func (r GetRequest) Id() string {
+func (r UrlRequest) Id() string {
 	return r.Base.FormValue("id")
 }
-func (r GetRequest) Query() string {
+func (r UrlRequest) Query() string {
 	return r.Base.FormValue("q")
 }
 
 // count, skip etc.
 
-type GetHandler func(res *JsonResponse, r *GetRequest)
+type UrlHandler func(res *JsonResponse, r *UrlRequest)
 
-func Get(handler GetHandler) http.HandlerFunc {
+func Url(handler UrlHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handler(&JsonResponse{w}, &GetRequest{r})
+		handler(&JsonResponse{w}, &UrlRequest{r})
 	}
 }
