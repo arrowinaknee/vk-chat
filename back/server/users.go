@@ -18,12 +18,6 @@ type api_user struct {
 	Nickname string `json:"nickname"`
 }
 
-type db_user struct {
-	Id       string `bson:"_id"`
-	Nickname string `bson:"nickname"`
-	RegDate  int64  `bson:"reg_date"`
-}
-
 func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.UrlRequest) {
 	conn, err := s.db.Connect()
 	if err != nil {
@@ -91,7 +85,7 @@ func (s *Server) HandleUsersPost(res *api.JsonResponse, r *api.JsonRequest[api_u
 	}
 	c := conn.Collection("users")
 	t := time.Now().Unix()
-	_, err = c.InsertOne(context.TODO(), db_user{
+	_, err = c.InsertOne(context.TODO(), db.User{
 		Id:       r.V.Login,
 		Nickname: r.V.Nickname,
 		RegDate:  t,
