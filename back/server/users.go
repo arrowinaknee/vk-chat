@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"ru.arrowinaknee.vk-chat/api"
+	"ru.arrowinaknee.vk-chat/db"
 )
 
 type api_user struct {
@@ -25,28 +25,22 @@ type db_user struct {
 }
 
 func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.GetRequest) {
-	id := r.Id()
-
 	conn, err := s.db.Connect()
 	if err != nil {
 		res.Error(http.StatusBadGateway, "database not available")
 		return
 	}
-	c := conn.Database("arrowchat").Collection("users")
+	c := conn.Collection("users")
 
 	if r.Id() == "" {
 		var arr []*api_user
 
 		var filter any
 		if q := r.Query(); q != "" {
-			filter = bson.D{{Key: "$or", Value: bson.A{
-				bson.D{{Key: "_id", Value: bson.D{
-					{Key: "$regex", Value: primitive.Regex{Pattern: q, Options: "i"}},
-				}}},
-				bson.D{{Key: "nickname", Value: bson.D{
-					{Key: "$regex", Value: primitive.Regex{Pattern: q, Options: "i"}},
-				}}},
-			}}}
+			filter = db.Or([]any{
+				db.Regex("nickname", q, "i"),
+				db.Regex("_id", q, "i"),
+			})
 		} else {
 			filter = bson.D{}
 		}
@@ -60,8 +54,7 @@ func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.GetRequest) {
 		}
 
 		for cur.Next(context.TODO()) {
-			var u db_user
-			err = cur.Decode(&u)
+			u, err := db.Decode[db.User](cur)
 
 			if err != nil {
 				log.Printf("Error fetching user data: %s", err)
@@ -75,8 +68,7 @@ func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.GetRequest) {
 		res.Write(arr)
 
 	} else {
-		var u db_user
-		err = c.FindOne(context.TODO(), bson.D{bson.E{Key: "_id", Value: id}}).Decode(&u)
+		u, err := db.Decode[db.User](c.FindOne(context.TODO(), db.ById(r.Id())))
 
 		if err == mongo.ErrNoDocuments {
 			res.NotFound()
@@ -97,7 +89,7 @@ func (s *Server) HandleUsersPost(res *api.JsonResponse, u *api_user) {
 		res.Error(http.StatusBadGateway, "database not available")
 		return
 	}
-	c := conn.Database("arrowchat").Collection("users")
+	c := conn.Collection("users")
 	t := time.Now().Unix()
 	_, err = c.InsertOne(context.TODO(), db_user{
 		Id:       u.Login,

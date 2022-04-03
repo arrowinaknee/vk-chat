@@ -1,17 +1,25 @@
 package server
 
-import "net/http"
+import (
+	"net/http"
+
+	"ru.arrowinaknee.vk-chat/db"
+)
 
 type Server struct {
 	Addr   string
 	DBLink string
+	DBName string
 
-	db  db_t
+	db  db.DB
 	msg messages
 }
 
 func (s *Server) Start() {
-	s.db = db_t(s.DBLink)
+	s.db = db.DB{
+		Uri: s.DBLink,
+		Use: s.DBName,
+	}
 
 	s.routes()
 	http.ListenAndServe(s.Addr, nil)
