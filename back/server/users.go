@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"ru.arrowinaknee.vk-chat/api"
 )
 
@@ -24,10 +26,7 @@ type db_user struct {
 
 func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.GetRequest) {
 	id := r.Id()
-	if id == "" {
-		res.Error(http.StatusBadRequest, "request must have 'id' specified")
-		return
-	}
+
 	conn, err := s.db.Connect()
 	if err != nil {
 		res.Error(http.StatusBadGateway, "database not available")
@@ -35,18 +34,61 @@ func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.GetRequest) {
 	}
 	c := conn.Database("arrowchat").Collection("users")
 
-	var u db_user
-	err = c.FindOne(context.TODO(), bson.D{bson.E{Key: "_id", Value: id}}).Decode(&u)
-	if err == mongo.ErrNoDocuments {
-		res.NotFound()
-		return
-	} else if err != nil {
-		log.Printf("Error fetching user data: %s", err)
-		res.Error(http.StatusInternalServerError, "could not fetch user")
-		return
-	}
+	if r.Id() == "" {
+		var arr []*api_user
 
-	res.Write(&api_user{Login: u.Id, Nickname: u.Nickname})
+		var filter any
+		if q := r.Query(); q != "" {
+			filter = bson.D{{Key: "$or", Value: bson.A{
+				bson.D{{Key: "_id", Value: bson.D{
+					{Key: "$regex", Value: primitive.Regex{Pattern: q, Options: "i"}},
+				}}},
+				bson.D{{Key: "nickname", Value: bson.D{
+					{Key: "$regex", Value: primitive.Regex{Pattern: q, Options: "i"}},
+				}}},
+			}}}
+		} else {
+			filter = bson.D{}
+		}
+
+		cur, err := c.Find(context.TODO(), filter, options.Find())
+
+		if err != nil {
+			log.Printf("Error fetching user data: %s", err)
+			res.Error(http.StatusInternalServerError, "could not fetch user data")
+			return
+		}
+
+		for cur.Next(context.TODO()) {
+			var u db_user
+			err = cur.Decode(&u)
+
+			if err != nil {
+				log.Printf("Error fetching user data: %s", err)
+				res.Error(http.StatusInternalServerError, "could not fetch user data")
+				return
+			}
+
+			arr = append(arr, &api_user{Login: u.Id, Nickname: u.Nickname})
+		}
+
+		res.Write(arr)
+
+	} else {
+		var u db_user
+		err = c.FindOne(context.TODO(), bson.D{bson.E{Key: "_id", Value: id}}).Decode(&u)
+
+		if err == mongo.ErrNoDocuments {
+			res.NotFound()
+			return
+		} else if err != nil {
+			log.Printf("Error fetching user data: %s", err)
+			res.Error(http.StatusInternalServerError, "could not fetch user data")
+			return
+		}
+
+		res.Write(&api_user{Login: u.Id, Nickname: u.Nickname})
+	}
 }
 
 func (s *Server) HandleUsersPost(res *api.JsonResponse, u *api_user) {
