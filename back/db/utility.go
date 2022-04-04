@@ -20,6 +20,18 @@ func Or(args []any) bson.D {
 	}}
 }
 
+// specify wich fields to return from query
+func Include(fields ...string) bson.D {
+	r := make(bson.D, 0, len(fields))
+	for _, v := range fields {
+		r = append(r, bson.E{
+			Key:   v,
+			Value: 1,
+		})
+	}
+	return r
+}
+
 func ById(id any) bson.D {
 	return bson.D{{
 		Key:   "_id",

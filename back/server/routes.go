@@ -16,9 +16,13 @@ func (s *Server) routes() {
 		Post: api.Json(s.HandleUsersPost),
 	})
 	http.Handle("/friends", api.Endpoint{
-		Get:    api.Url(s.HandleFriendsGet),
-		Post:   api.Json(s.HandleFriendsPost),
-		Delete: api.Url(s.HandleFriendsDelete),
+		Preprocess: s.Auth,
+		Get:        api.Url(s.HandleFriendsGet),
+		Post:       api.Json(s.HandleFriendsPost),
+		Delete:     api.Url(s.HandleFriendsDelete),
+	})
+	http.Handle("/auth", api.Endpoint{
+		Post: api.Json(s.HandleAuthPost),
 	})
 	http.Handle("/messages/history", api.Endpoint{
 		Get: api.Url(s.handleMessageHistory),

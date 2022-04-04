@@ -5,13 +5,21 @@ import (
 )
 
 type Endpoint struct {
-	Get    http.HandlerFunc
-	Post   http.HandlerFunc
-	Delete http.HandlerFunc
-	Put    http.HandlerFunc
+	Preprocess HandlerFactory[http.HandlerFunc]
+	Get        http.HandlerFunc
+	Post       http.HandlerFunc
+	Delete     http.HandlerFunc
+	Put        http.HandlerFunc
 }
 
 func (e Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if e.Preprocess != nil {
+		e.Preprocess(e._serve)(w, r)
+	} else {
+		e._serve(w, r)
+	}
+}
+func (e Endpoint) _serve(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if e.Get != nil {

@@ -39,7 +39,7 @@ func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.UrlRequest) {
 			filter = bson.D{}
 		}
 
-		cur, err := c.Find(context.TODO(), filter, options.Find())
+		cur, err := c.Find(context.TODO(), filter, options.Find().SetProjection(db.Include("_id", "nickname")))
 
 		if err != nil {
 			log.Printf("Error fetching user data: %s", err)
@@ -62,7 +62,7 @@ func (s *Server) HandleUsersGet(res *api.JsonResponse, r *api.UrlRequest) {
 		res.Write(arr)
 
 	} else {
-		u, err := db.Decode[db.User](c.FindOne(context.TODO(), db.ById(r.Id()), options.FindOne().SetProjection(bson.D{{Key: "friends", Value: 0}})))
+		u, err := db.Decode[db.User](c.FindOne(context.TODO(), db.ById(r.Id()), options.FindOne().SetProjection(db.Include("_id", "nickname"))))
 
 		if err == mongo.ErrNoDocuments {
 			res.NotFound()

@@ -13,7 +13,7 @@ import (
 )
 
 func (s *Server) HandleFriendsGet(res *api.JsonResponse, r *api.UrlRequest) {
-	uid := r.Base.Header.Get("Authorization")
+	uid := s.getUserId(r.Base)
 
 	conn, err := s.db.Connect()
 	if err != nil {
@@ -22,7 +22,7 @@ func (s *Server) HandleFriendsGet(res *api.JsonResponse, r *api.UrlRequest) {
 	}
 	c := conn.Collection("users")
 
-	u, err := db.Decode[db.User](c.FindOne(context.TODO(), db.ById(uid), options.FindOne().SetProjection(bson.D{{Key: "friends", Value: 1}})))
+	u, err := db.Decode[db.User](c.FindOne(context.TODO(), db.ById(uid), options.FindOne().SetProjection(db.Include("friends"))))
 
 	if err == mongo.ErrNoDocuments {
 		res.Error(http.StatusUnauthorized, "user does not exist")
@@ -34,7 +34,7 @@ func (s *Server) HandleFriendsGet(res *api.JsonResponse, r *api.UrlRequest) {
 	}
 
 	f := make([]*api_user, 0, len(u.Friends))
-	cur, err := c.Find(context.TODO(), db.ById(bson.D{{Key: "$in", Value: u.Friends}}))
+	cur, err := c.Find(context.TODO(), db.ById(bson.D{{Key: "$in", Value: u.Friends}}), options.Find().SetProjection(db.Include("_id", "nickname")))
 	if err != nil {
 		log.Printf("Error fetching friends list: %s", err)
 		res.Error(http.StatusInternalServerError, "error fetching friends")
@@ -55,7 +55,7 @@ func (s *Server) HandleFriendsGet(res *api.JsonResponse, r *api.UrlRequest) {
 }
 
 func (s *Server) HandleFriendsPost(res *api.JsonResponse, r *api.JsonRequest[api.IdRequest[string]]) {
-	uid := r.Base.Header.Get("Authorization")
+	uid := s.getUserId(r.Base)
 
 	conn, err := s.db.Connect()
 	if err != nil {
@@ -95,7 +95,7 @@ func (s *Server) HandleFriendsPost(res *api.JsonResponse, r *api.JsonRequest[api
 }
 
 func (s *Server) HandleFriendsDelete(res *api.JsonResponse, r *api.UrlRequest) {
-	uid := r.Base.Header.Get("Authorization")
+	uid := s.getUserId(r.Base)
 
 	conn, err := s.db.Connect()
 	if err != nil {
